@@ -21,6 +21,12 @@ private:
 	UPROPERTY(VisibleAnywhere, Category = "MyPawn Component")
 	class UCameraComponent* m_Camera;
 
+	UPROPERTY(EditAnywhere, Category = "MyPawn Property")
+	float m_MaxSpeed;
+
+	FVector m_MoveVelocity;
+	FVector2D m_MoveInput;
+
 public:
 	// Sets default values for this pawn's properties
 	AmainCharacter();
@@ -35,5 +41,11 @@ public:
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+private:
+	void MoveForward(float AxisValue);
+	void MoveRight(float AxisValue);
+	void LookRight(float AxisValue);
+	void LookUp(float AxisValue);
 
 };
