@@ -1,95 +1,145 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "mainCharacter.h"
+#include "MainCharacter.h"
 #include "Camera/CameraComponent.h"
-#include "Components/InputComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "UObject/ConstructorHelpers.h"
+#include "EnhancedInputSubsystems.h"
+#include "EnhancedInputComponent.h"
+#include "Components/CapsuleComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 // Sets default values
-AmainCharacter::AmainCharacter()
+AMainCharacter::AMainCharacter()
 {
- 	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+ 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	m_SkeletalMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("SkeletalMesh"));
-	RootComponent = m_SkeletalMesh;
+	// Set size for collision capsule
+	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
 
-	static ConstructorHelpers::FObjectFinder<USkeletalMesh> m_StaticMeshAsset(TEXT("/Script/Engine.SkeletalMesh'/Game/ParagonShinbi/Characters/Heroes/Shinbi/Meshes/Shinbi.Shinbi'"));
-	if (m_StaticMeshAsset.Succeeded())
-	{
-		m_SkeletalMesh->SetSkeletalMesh(m_StaticMeshAsset.Object);
-	}
-	//m_SkeletalMesh->AddRelativeLocation(FVector(0.0f, 0.0f, -83.0f));
+	// Don't rotate when the controller rotates. Let that just affect the camera.
+	bUseControllerRotationPitch = false;
+	bUseControllerRotationYaw = false;
+	bUseControllerRotationRoll = false;
 
-	m_SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
-	m_SpringArm->SetupAttachment(m_SkeletalMesh);
-	m_SpringArm->AddRelativeRotation(FRotator(-45.0f, 90.0f, 0.0f));
-	m_SpringArm->TargetArmLength = 400.0f;
-	m_SpringArm->bEnableCameraLag = true;
-	m_SpringArm->CameraLagSpeed = 3.0f;
+	GetCharacterMovement()->bOrientRotationToMovement = true;				// Character moves in the direction of input...	
+	GetCharacterMovement()->RotationRate = FRotator(0.0f, 500.0f, 0.0f);	// ...at this rotation rate
 
-	m_Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
-	m_Camera->SetupAttachment(m_SpringArm);
+	// Note: For faster iteration times these variables, and many more, can be tweaked in the Character Blueprint
+	// instead of recompiling to adjust them
+	GetCharacterMovement()->JumpZVelocity = 700.f;
+	GetCharacterMovement()->AirControl = 0.35f;
+	GetCharacterMovement()->MaxWalkSpeed = 500.f;
+	GetCharacterMovement()->MinAnalogWalkSpeed = 20.f;
+	GetCharacterMovement()->BrakingDecelerationWalking = 2000.f;
+	GetCharacterMovement()->BrakingDecelerationFalling = 1500.0f;
 
-	AutoPossessPlayer = EAutoReceiveInput::Player0;
-	bUseControllerRotationYaw = true;
+	// Create a camera boom (pulls in towards the player if there is a collision)
+	m_SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
+	m_SpringArm->SetupAttachment(RootComponent);
+	m_SpringArm->TargetArmLength = 400.0f; // The camera follows at this distance behind the character
+	m_SpringArm->bUsePawnControlRotation = true; // Rotate the arm based on the controller
 
-	m_MaxSpeed = 100.0f;
+	// Create a follow camera
+	m_Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
+	m_Camera->SetupAttachment(m_SpringArm, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
+	m_Camera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
 
-	m_MoveVelocity = FVector(0.0f);
+	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
+	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
 
+	m_bIsCrouching = false;
 }
 
 // Called when the game starts or when spawned
-void AmainCharacter::BeginPlay()
+void AMainCharacter::BeginPlay()
 {
+	// Call the base class 
 	Super::BeginPlay();
 	
+	//Add Input Mapping Context
+	if (APlayerController* playerController = CastChecked<APlayerController>(GetController())) {
+		if (UEnhancedInputLocalPlayerSubsystem* subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(playerController->GetLocalPlayer())) {
+			subsystem->AddMappingContext(m_InputMappingContext, 0);
+		}
+	}
 }
 
 // Called every frame
-void AmainCharacter::Tick(float DeltaTime)
+void AMainCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	AddActorLocalOffset(m_MoveVelocity * DeltaTime, true);
-	AddControllerYawInput(m_MoveInput.X);
-
-	FRotator newSpringArmRotation = m_SpringArm->GetComponentRotation();
-	newSpringArmRotation.Pitch = FMath::Clamp(newSpringArmRotation.Pitch + m_MoveInput.Y, -80.0f, -15.0f);
-	m_SpringArm->SetWorldRotation(newSpringArmRotation);
 }
+
+//////////////////////////////////////////////////////////////////////////
+// Input
 
 // Called to bind functionality to input
-void AmainCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+void AMainCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
-	PlayerInputComponent->BindAxis(TEXT("MoveForward"), this, &AmainCharacter::MoveForward);
-	PlayerInputComponent->BindAxis(TEXT("MoveRight"), this, &AmainCharacter::MoveRight);
-	PlayerInputComponent->BindAxis(TEXT("LookRight"), this, &AmainCharacter::LookRight);
-	PlayerInputComponent->BindAxis(TEXT("LookUp"), this, &AmainCharacter::LookUp);
+	//Super::SetupPlayerInputComponent(PlayerInputComponent);
+
+	if (UEnhancedInputComponent* enhancedInputComponent = CastChecked<UEnhancedInputComponent>(PlayerInputComponent)) {
+		
+		// Jumping
+		enhancedInputComponent->BindAction(m_JumpAction, ETriggerEvent::Started, this, &ACharacter::Jump);
+		enhancedInputComponent->BindAction(m_JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
+
+		// Moving
+		enhancedInputComponent->BindAction(m_MoveAction, ETriggerEvent::Triggered, this, &AMainCharacter::Move);
+		
+		// Looking
+		enhancedInputComponent->BindAction(m_LookAction, ETriggerEvent::Triggered, this, &AMainCharacter::Look);
+
+		// Crouching
+		enhancedInputComponent->BindAction(m_CrouchAction, ETriggerEvent::Started, this, &AMainCharacter::Crouch);
+	}
+	else {
+		UE_LOG(LogTemp, Error, TEXT("'%s' Failed to find an Enhanced Input component! This template is built to use the Enhanced Input system. If you intend to use the legacy system, then you will need to update this C++ file."), *GetNameSafe(this))
+	}
 
 }
 
-void AmainCharacter::MoveForward(float AxisValue)
+void AMainCharacter::Move(const FInputActionValue& Value)
 {
-	m_MoveVelocity.Y = FMath::Clamp(AxisValue * m_MaxSpeed, -100.0f, 100.0f);
+	// input is a Vector2D
+	FVector2D movementVector = Value.Get<FVector2D>();
+
+	if (Controller != nullptr) {
+		// find out which way is forward
+		const FRotator rotation = Controller->GetControlRotation();
+		const FRotator yawRotation(0, rotation.Yaw, 0);
+
+		// get forward vector
+		const FVector forwardDirection = FRotationMatrix(yawRotation).GetUnitAxis(EAxis::X);
+
+		// get right vector 
+		const FVector rightDirection = FRotationMatrix(yawRotation).GetUnitAxis(EAxis::Y);
+
+		// add movement
+		AddMovementInput(forwardDirection, movementVector.Y);
+		AddMovementInput(rightDirection, movementVector.X);
+	}
+	UE_LOG(LogTemp, Warning, TEXT("Move"))
 }
 
-void AmainCharacter::MoveRight(float AxisValue)
+void AMainCharacter::Look(const FInputActionValue& Value)
 {
-	m_MoveVelocity.X = FMath::Clamp(AxisValue * m_MaxSpeed, -100.0f, 100.0f);
+	// input is a Vector2D
+	FVector2D lookAxisVector = Value.Get<FVector2D>();
+
+	if (Controller != nullptr) {
+		AddControllerYawInput(lookAxisVector.X);
+		AddControllerPitchInput(lookAxisVector.Y);
+	}
+	UE_LOG(LogTemp, Warning, TEXT("Look"))
 }
 
-void AmainCharacter::LookRight(float AxisValue)
+void AMainCharacter::Crouch(const FInputActionValue& Value)
 {
-	m_MoveInput.X = FMath::Clamp(AxisValue, -1.0f, 1.0f);
-}
-
-void AmainCharacter::LookUp(float AxisValue)
-{
-	m_MoveInput.Y = FMath::Clamp(AxisValue, -1.0f, 1.0f);
+	m_bIsCrouching = !m_bIsCrouching;
 }
 

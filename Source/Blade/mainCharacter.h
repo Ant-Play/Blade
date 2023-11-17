@@ -2,50 +2,83 @@
 
 #pragma once
 
+#include "Logging/LogMacros.h"
+#include "InputActionValue.h"
 #include "CoreMinimal.h"
-#include "GameFramework/Pawn.h"
-#include "mainCharacter.generated.h"
+#include "GameFramework/Character.h"
+#include "MainCharacter.generated.h"
 
-UCLASS()
-class BLADE_API AmainCharacter : public APawn
+//DECLARE_LOG_CATEGORY_EXTERN(LogMainCharacter, Log, All);
+
+
+UCLASS(config=Game)
+class BLADE_API AMainCharacter : public ACharacter
 {
 	GENERATED_BODY()
-
 private:
-	UPROPERTY(VisibleAnywhere, Category = "MyPawn Component")
-	class USkeletalMeshComponent* m_SkeletalMesh;
-
-	UPROPERTY(VisibleAnywhere, Category = "MyPawn Component")
+	/** Camera boom positioning the camera behind the character */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class USpringArmComponent* m_SpringArm;
 
-	UPROPERTY(VisibleAnywhere, Category = "MyPawn Component")
+	/** Follow camera */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class UCameraComponent* m_Camera;
 
-	UPROPERTY(EditAnywhere, Category = "MyPawn Property")
-	float m_MaxSpeed;
+	/** MappingContext */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	class UInputMappingContext* m_InputMappingContext;
 
-	FVector m_MoveVelocity;
-	FVector2D m_MoveInput;
+	/** Jump Input Action */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	class UInputAction* m_JumpAction;
 
+	/** Move Input Action */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	class UInputAction* m_MoveAction;
+
+	/** Look Input Action */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	class UInputAction* m_LookAction;
+
+	/** Crouch Input Action */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	class UInputAction* m_CrouchAction;
+
+	/** Crouch Input Action */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Variable, meta = (AllowPrivateAccess = "true"))
+	bool m_bIsCrouching;
 public:
-	// Sets default values for this pawn's properties
-	AmainCharacter();
+	// Sets default values for this character's properties
+	AMainCharacter();
+
+protected:
+	/** Called for movement input */
+	void Move(const FInputActionValue& Value);
+
+	/** Called for looking input */
+	void Look(const FInputActionValue& Value);
+
+	/** Called for crouching input */
+	void Crouch(const FInputActionValue& Value);
 
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+	// Called to bind functionality to input
+	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	// Called to bind functionality to input
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+	/** Returns CameraBoom subobject **/
+	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return m_SpringArm; }
 
-private:
-	void MoveForward(float AxisValue);
-	void MoveRight(float AxisValue);
-	void LookRight(float AxisValue);
-	void LookUp(float AxisValue);
+	/** Returns FollowCamera subobject **/
+	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return m_Camera; }
 
+	/** Returns is Crouched? **/
+	FORCEINLINE bool IsCrouching() const { return m_bIsCrouching; }
+	
 };
