@@ -33,24 +33,24 @@ AMainCharacter::AMainCharacter()
 	GetCharacterMovement()->AirControl = 0.35f;
 	GetCharacterMovement()->MaxWalkSpeed = 500.f;
 	GetCharacterMovement()->MinAnalogWalkSpeed = 20.f;
-	GetCharacterMovement()->BrakingDecelerationWalking = 2000.f;
-	GetCharacterMovement()->BrakingDecelerationFalling = 1500.0f;
+	GetCharacterMovement()->BrakingDecelerationWalking = 400.f;
+	GetCharacterMovement()->BrakingDecelerationFalling = 500.0f;
 
 	// Create a camera boom (pulls in towards the player if there is a collision)
-	m_SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
-	m_SpringArm->SetupAttachment(RootComponent);
-	m_SpringArm->TargetArmLength = 400.0f; // The camera follows at this distance behind the character
-	m_SpringArm->bUsePawnControlRotation = true; // Rotate the arm based on the controller
+	SpringArmComponent = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
+	SpringArmComponent->SetupAttachment(RootComponent);
+	SpringArmComponent->TargetArmLength = 400.0f; // The camera follows at this distance behind the character
+	SpringArmComponent->bUsePawnControlRotation = true; // Rotate the arm based on the controller
 
 	// Create a follow camera
-	m_Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
-	m_Camera->SetupAttachment(m_SpringArm, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
-	m_Camera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
+	CameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
+	CameraComponent->SetupAttachment(SpringArmComponent, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
+	CameraComponent->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
 
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
 
-	m_bIsCrouching = false;
+	//bIsCrouching = false;
 }
 
 // Called when the game starts or when spawned
@@ -62,7 +62,7 @@ void AMainCharacter::BeginPlay()
 	//Add Input Mapping Context
 	if (APlayerController* playerController = CastChecked<APlayerController>(GetController())) {
 		if (UEnhancedInputLocalPlayerSubsystem* subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(playerController->GetLocalPlayer())) {
-			subsystem->AddMappingContext(m_InputMappingContext, 0);
+			subsystem->AddMappingContext(InputMappingContext, 0);
 		}
 	}
 }
@@ -85,17 +85,17 @@ void AMainCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 	if (UEnhancedInputComponent* enhancedInputComponent = CastChecked<UEnhancedInputComponent>(PlayerInputComponent)) {
 		
 		// Jumping
-		enhancedInputComponent->BindAction(m_JumpAction, ETriggerEvent::Started, this, &ACharacter::Jump);
-		enhancedInputComponent->BindAction(m_JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
+		enhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ACharacter::Jump);
+		enhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
 
 		// Moving
-		enhancedInputComponent->BindAction(m_MoveAction, ETriggerEvent::Triggered, this, &AMainCharacter::Move);
+		enhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AMainCharacter::Move);
 		
 		// Looking
-		enhancedInputComponent->BindAction(m_LookAction, ETriggerEvent::Triggered, this, &AMainCharacter::Look);
+		enhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AMainCharacter::Look);
 
 		// Crouching
-		enhancedInputComponent->BindAction(m_CrouchAction, ETriggerEvent::Started, this, &AMainCharacter::Crouch);
+		//enhancedInputComponent->BindAction(CrouchAction, ETriggerEvent::Started, this, &AMainCharacter::Crouch);
 	}
 	else {
 		UE_LOG(LogTemp, Error, TEXT("'%s' Failed to find an Enhanced Input component! This template is built to use the Enhanced Input system. If you intend to use the legacy system, then you will need to update this C++ file."), *GetNameSafe(this))
@@ -138,8 +138,8 @@ void AMainCharacter::Look(const FInputActionValue& Value)
 	UE_LOG(LogTemp, Warning, TEXT("Look"))
 }
 
-void AMainCharacter::Crouch(const FInputActionValue& Value)
-{
-	m_bIsCrouching = !m_bIsCrouching;
-}
+//void AMainCharacter::Crouch(const FInputActionValue& Value)
+//{
+//	bIsCrouching = !bIsCrouching;
+//}
 
