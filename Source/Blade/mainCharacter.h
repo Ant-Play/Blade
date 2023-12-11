@@ -61,6 +61,9 @@ protected:
 	/** Called for crouching input */
 	//void Crouch(const FInputActionValue& Value);
 
+	void SetRotationTrue();
+	void SetRotationFalse();
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;

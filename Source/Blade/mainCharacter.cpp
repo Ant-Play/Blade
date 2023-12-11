@@ -39,8 +39,9 @@ AMainCharacter::AMainCharacter()
 	// Create a camera boom (pulls in towards the player if there is a collision)
 	SpringArmComponent = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	SpringArmComponent->SetupAttachment(RootComponent);
-	SpringArmComponent->TargetArmLength = 400.0f; // The camera follows at this distance behind the character
+	SpringArmComponent->TargetArmLength = 200.0f; // The camera follows at this distance behind the character
 	SpringArmComponent->bUsePawnControlRotation = true; // Rotate the arm based on the controller
+	SpringArmComponent->SocketOffset = FVector(0, 65.0f, 25.0f);
 
 	// Create a follow camera
 	CameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
@@ -80,7 +81,7 @@ void AMainCharacter::Tick(float DeltaTime)
 // Called to bind functionality to input
 void AMainCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
-	//Super::SetupPlayerInputComponent(PlayerInputComponent);
+	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
 	if (UEnhancedInputComponent* enhancedInputComponent = CastChecked<UEnhancedInputComponent>(PlayerInputComponent)) {
 		
@@ -90,6 +91,10 @@ void AMainCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 
 		// Moving
 		enhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AMainCharacter::Move);
+		enhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Started, this, &AMainCharacter::SetRotationTrue);
+		enhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Completed, this, &AMainCharacter::SetRotationFalse);
+		enhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Canceled, this, &AMainCharacter::SetRotationFalse);
+
 		
 		// Looking
 		enhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AMainCharacter::Look);
@@ -107,16 +112,18 @@ void AMainCharacter::Move(const FInputActionValue& Value)
 {
 	// input is a Vector2D
 	FVector2D movementVector = Value.Get<FVector2D>();
-
 	if (Controller != nullptr) {
 		// find out which way is forward
+		//const FRotator rotation = GetMesh()->GetComponentRotation();
 		const FRotator rotation = Controller->GetControlRotation();
 		const FRotator yawRotation(0, rotation.Yaw, 0);
 
 		// get forward vector
+		//const FVector forwardDirection = GetMesh()->GetForwardVector();
 		const FVector forwardDirection = FRotationMatrix(yawRotation).GetUnitAxis(EAxis::X);
 
 		// get right vector 
+		//const FVector rightDirection = GetMesh()->GetRightVector();
 		const FVector rightDirection = FRotationMatrix(yawRotation).GetUnitAxis(EAxis::Y);
 
 		// add movement
@@ -132,10 +139,25 @@ void AMainCharacter::Look(const FInputActionValue& Value)
 	FVector2D lookAxisVector = Value.Get<FVector2D>();
 
 	if (Controller != nullptr) {
+		//SpringArmComponent->AddLocalRotation(FRotator(0, lookAxisVector.X, 0));
+		//SpringArmComponent->AddLocalRotation(FRotator(lookAxisVector.Y, 0, 0));
+		//SpringArmComponent->AddRelativeRotation(FRotator(lookAxisVector.Y, lookAxisVector.X, 0));
 		AddControllerYawInput(lookAxisVector.X);
 		AddControllerPitchInput(lookAxisVector.Y);
+		//CameraComponent->AddLocalRotation(FRotator(lookAxisVector.Y, 0, 0));
+		//CameraComponent->AddLocalRotation(FRotator(0, lookAxisVector.X, 0));
 	}
 	UE_LOG(LogTemp, Warning, TEXT("Look"))
+}
+
+void AMainCharacter::SetRotationTrue()
+{
+	GetCharacterMovement()->bUseControllerDesiredRotation = true;
+}
+
+void AMainCharacter::SetRotationFalse()
+{
+	GetCharacterMovement()->bUseControllerDesiredRotation = false;
 }
 
 //void AMainCharacter::Crouch(const FInputActionValue& Value)
