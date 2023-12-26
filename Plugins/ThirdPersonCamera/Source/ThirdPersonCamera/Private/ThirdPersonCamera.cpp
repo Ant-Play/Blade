@@ -18,3 +18,5 @@ void FThirdPersonCameraModule::ShutdownModule()
 #undef LOCTEXT_NAMESPACE
 	
 IMPLEMENT_MODULE(FThirdPersonCameraModule, ThirdPersonCamera)
+
+DEFINE_LOG_CATEGORY(LogTPC);

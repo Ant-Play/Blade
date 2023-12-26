@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "ATPCInterploationSpeed.h"
+#include "ATPCInterpolationSpeed.h"
 #include "CoreMinimal.h"
 #include "Engine/EngineTypes.h"
 #include "ATPCTypes.generated.h"
@@ -56,7 +56,7 @@ struct THIRDPERSONCAMERA_API FATPCCameraRotationLagSettings
 public:
 	/** If is true, controls how quickly camera reaches target position. Low values are slower (more lag), high values are faster (less lag), while zero is instant (no lag). */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings", meta = (ClampMin = "0.0", ClampMax = "1000.0", UIMin = "0.0", UIMax = "1000.0"))
-	float CameraLagSpeed = 5.0f;
+	float CameraLagSpeed = 10.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
 	bool bUseCameraLagSubstepping = false;
@@ -74,7 +74,7 @@ struct THIRDPERSONCAMERA_API FATPCLocationSettings
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings", meta = (InlineEditConditionToggle))
 	bool bEnableCameraLocationLag = true;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings", meta = (editcondition = "bEnableCameraLocationLag"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings", meta = (Editcondition = "bEnableCameraLocationLag"))
 	FATPCCameraLocationLagSettings CameraLocationLagSettings;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings", meta = (InlineEditConditionToggle))
@@ -125,6 +125,7 @@ public:
 	/** Minimal camera distance until character */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings", meta = (ClampMin = "0.0", UIMin = "0.0"))
 	float MinCameraDistance = 100.f;
+	/** Maximum camera distance from character */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings", meta = (ClampMin = "0.0", UIMin = "0.0"))
 	float MaxCameraDistance = 1000.f;
 
@@ -135,6 +136,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings", meta = (Editcondition = "!bCacheDistanceForCurrentCameraMode"))
 	bool bSetDistanceToDefaultOnChangeCameraMode = true;
 	/** If is true, set CameraDistance to this value in first CameraMode or  when CameraMode changed and if bSetDistanceToDefaultOnChangeCameraMode is true */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings", meta = (ClampMin = "0.0", UIMin = "0.0"))
 	float DefaultCameraDistance = 500.f;
 
 	/**
@@ -232,7 +234,7 @@ public:
 
 	/** Angle of rotation for character roof trace. See @ActorRoofBoxTraceHalfSize */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
-	float RoofTraceAngleFitst = 15.f;
+	float RoofTraceAngleFirst = 15.f;
 
 	/** Half size trace from character eyes(getting eyes viewpoint from AActor::GetActorEyesViewPoint using in BoxTrace) */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
@@ -268,7 +270,7 @@ public:
 
 	/** Change speed of rotation of camera in direction of rotation of actor */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
-	FATPCInterploationSpeed RotationInterploation = 1.f;
+	FATPCInterploationSpeed RotationInterpolation = 1.f;
 };
 
 USTRUCT(BlueprintType)
@@ -289,7 +291,7 @@ public:
 	float ViewYawMin = 0.f;
 	/** Maximum view yaw, in degrees. */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings", meta = (ClampMin = "0.0", ClampMax = "359.999", UIMin = "0.0", UIMax = "359.999"))
-	float ViewYawMax = 359.999f;
+	float ViewYawMax = 359.9999f;
 
 	/**
 	* Rate of change of camera view(pitch and yaw)
@@ -301,12 +303,12 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings", meta = (InlineEditConditionToggle))
 	bool bEnableRotationOffset = true;
 	/** The default offset settings. Used when the user does not change the camera rotation manually.*/
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings", meta = (EditCondition = "bEnableRotationOffset"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings", meta = (Editcondition = "bEnableRotationOffset"))
 	FATPCRotationOffsetSettings RotationOffsetSettings;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings", meta = (InlineEditConditionToggle))
 	bool bEnableRoofCollisionCheckSettings = true;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings", meta = (editcondition = "bEnableRoofCollisionCheckSettings"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings", meta = (Editcondition = "bEnableRoofCollisionCheckSettings"))
 	FATPCRoofCollisionCheckSettings RoofCollisionCheckSettings;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings", meta = (InlineEditConditionToggle))
@@ -409,6 +411,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
 	TEnumAsByte<ECollisionChannel> FadeChannel = ECC_Camera;
 
+
 	/**
 	* Do need hide self character if he collided with camera.
 	* For camera check radius see @SelfFadeCheckRadius
@@ -425,12 +428,12 @@ public:
 	float SelfFadeCustomFadeOutTime = 1.f;
 
 	/** Radius sphere trace to determine camera collision with character*/
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings", meta = (EditCondition = "bFadeSelfIfCollision", ClampMin = "0.0", UIMin = "0.0"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings", meta = (EditCondition = "bFadeSelfIfCollision", ClampMin = "1.0", UIMin = "1.0"))
 	float SelfFadeCheckRadius = 18.f;
 
 	/** If true, and if bFadeSelfIfCollision true then all attached actors to character will be faded */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings", meta = (EditCondition = "bFadeSelfIfCollision"))
-	bool bFadeAttachedActors = true;
+	bool bSelfFadeAttachedActors = true;
 };
 
 /**
@@ -462,7 +465,7 @@ public:
 	* Curve Time - current terrain pitch angle
 	*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
-	UCurveFloat* PitchOffsetCurve = nullptr;
+	UCurveFloat* PitchRotationCurve = nullptr;
 
 	/** Pitch offset change speed */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
@@ -493,7 +496,7 @@ public:
 
 	/* If true stop all camera shakes on camera */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
-	bool bNeedStopAllCameraOnEnterToCameraMode = false;
+	bool bNeedStopAllCameraShakeOnEnterToCameraMode = false;
 };
 
 USTRUCT(BlueprintType)
@@ -504,7 +507,7 @@ struct THIRDPERSONCAMERA_API FATPCLockOnTargetSettings
 public:
 	/** If true, reset TargetActor from CameraLockOnTargetObject when other camera mode is set */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
-	bool bResetTargetActorOnCameraMode = true;
+	bool bResetTargetOnChangeCameraMode = false;
 
 	/** If true, rotate camera by yaw when target is set */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
@@ -520,7 +523,7 @@ public:
 
 	/**If true, reset CameraRotationInterpolation speed after set new a non null target actor(when the target cleared interpolation speed will be always reset)*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
-	bool bResetInterpolationSpeedAfterChangeTarget = true;
+	bool bResetInterpolationSpeedAfterChangeTarget = false;
 
 	/** If true, use rotation limits @ViewPitchMin, @ViewPitchMax, @ViewYawhMin, @ViewYawMax from RotationSettings. Otherwise set camera rotation to a target without limits */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
@@ -556,7 +559,7 @@ public:
 
 	/** If true, @bHardLockOnTarget is false and the camera has a target, then after a player input camera will stop rotating for @PauseLockAfterPlayerInputTime time */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings", meta = (EditCondition = "!bHardLockOnTarget"))
-	bool bPauseLockAfterPlayerInput = true;
+	bool bPauseLockAfterPlayerInput = false;
 
 	/** See @bPauseLockAfterPlayerInput */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings", meta = (EditCondition = "bPauseLockAfterPlayerInput && !bHardLockOnTarget"))
