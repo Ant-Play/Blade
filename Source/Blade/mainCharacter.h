@@ -18,6 +18,7 @@ class BLADE_API AMainCharacter : public ACharacter
 private:
 	/** Camera boom positioning the camera behind the character */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	//class UATPCCameraComponent
 	class USpringArmComponent* SpringArmComponent;
 
 	/** Follow camera */
