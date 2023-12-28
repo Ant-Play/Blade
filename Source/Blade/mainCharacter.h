@@ -18,35 +18,36 @@ class BLADE_API AMainCharacter : public ACharacter
 private:
 	/** Camera boom positioning the camera behind the character */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
-	class USpringArmComponent* m_SpringArm;
+	//class UATPCCameraComponent
+	class USpringArmComponent* SpringArmComponent;
 
 	/** Follow camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
-	class UCameraComponent* m_Camera;
+	class UCameraComponent* CameraComponent;
 
 	/** MappingContext */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	class UInputMappingContext* m_InputMappingContext;
+	class UInputMappingContext* InputMappingContext;
 
 	/** Jump Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	class UInputAction* m_JumpAction;
+	class UInputAction* JumpAction;
 
 	/** Move Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	class UInputAction* m_MoveAction;
+	class UInputAction* MoveAction;
 
 	/** Look Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	class UInputAction* m_LookAction;
+	class UInputAction* LookAction;
 
 	/** Crouch Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	class UInputAction* m_CrouchAction;
+	class UInputAction* CrouchAction;
 
 	/** Crouch Input Action */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Variable, meta = (AllowPrivateAccess = "true"))
-	bool m_bIsCrouching;
+	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Variable, meta = (AllowPrivateAccess = "true"))
+	//bool bIsCrouching;
 public:
 	// Sets default values for this character's properties
 	AMainCharacter();
@@ -59,7 +60,10 @@ protected:
 	void Look(const FInputActionValue& Value);
 
 	/** Called for crouching input */
-	void Crouch(const FInputActionValue& Value);
+	//void Crouch(const FInputActionValue& Value);
+
+	void SetRotationTrue();
+	void SetRotationFalse();
 
 protected:
 	// Called when the game starts or when spawned
@@ -73,12 +77,12 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	/** Returns CameraBoom subobject **/
-	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return m_SpringArm; }
+	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return SpringArmComponent; }
 
 	/** Returns FollowCamera subobject **/
-	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return m_Camera; }
+	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return CameraComponent; }
 
-	/** Returns is Crouched? **/
-	FORCEINLINE bool IsCrouching() const { return m_bIsCrouching; }
+	///** Returns is Crouched? **/
+	//FORCEINLINE bool IsCrouching() const { return bIsCrouching; }
 	
 };

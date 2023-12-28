@@ -8,6 +8,7 @@ public class Blade : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput" });
+		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput", "MotionWarping", "ThirdPersonCamera"});
+		PublicIncludePaths.AddRange(new string[] {"ThirdPersonCamera/Public"});
 	}
 }
