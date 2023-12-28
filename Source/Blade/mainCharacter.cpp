@@ -3,12 +3,12 @@
 
 #include "MainCharacter.h"
 #include "Camera/CameraComponent.h"
-#include "GameFramework/SpringArmComponent.h"
 #include "UObject/ConstructorHelpers.h"
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "ThirdPersonCamera/Public/ATPCCameraComponent.h"
 
 // Sets default values
 AMainCharacter::AMainCharacter()
@@ -37,21 +37,22 @@ AMainCharacter::AMainCharacter()
 	GetCharacterMovement()->BrakingDecelerationFalling = 500.0f;
 
 	// Create a camera boom (pulls in towards the player if there is a collision)
-	SpringArmComponent = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
-	SpringArmComponent->SetupAttachment(RootComponent);
-	SpringArmComponent->TargetArmLength = 200.0f; // The camera follows at this distance behind the character
-	SpringArmComponent->bUsePawnControlRotation = true; // Rotate the arm based on the controller
-	SpringArmComponent->SocketOffset = FVector(0, 65.0f, 25.0f);
+	CameraComponent = CreateDefaultSubobject<UATPCCameraComponent>(TEXT("TPCCameraComponent"));
+	CameraComponent->SetupAttachment(RootComponent);
+	//SpringArmComponent = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
+	//SpringArmComponent->SetupAttachment(RootComponent);
+	//SpringArmComponent->TargetArmLength = 200.0f; // The camera follows at this distance behind the character
+	//SpringArmComponent->bUsePawnControlRotation = true; // Rotate the arm based on the controller
+	//SpringArmComponent->SocketOffset = FVector(0, 65.0f, 25.0f);
 
 	// Create a follow camera
-	CameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
-	CameraComponent->SetupAttachment(SpringArmComponent, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
-	CameraComponent->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
+	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
+	FollowCamera->SetupAttachment(CameraComponent);
+	//CameraComponent->SetupAttachment(SpringArmComponent, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
+	FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
 
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
-
-	//bIsCrouching = false;
 }
 
 // Called when the game starts or when spawned
@@ -91,10 +92,6 @@ void AMainCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 
 		// Moving
 		enhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AMainCharacter::Move);
-		enhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Started, this, &AMainCharacter::SetRotationTrue);
-		enhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Completed, this, &AMainCharacter::SetRotationFalse);
-		enhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Canceled, this, &AMainCharacter::SetRotationFalse);
-
 		
 		// Looking
 		enhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AMainCharacter::Look);
@@ -114,16 +111,13 @@ void AMainCharacter::Move(const FInputActionValue& Value)
 	FVector2D movementVector = Value.Get<FVector2D>();
 	if (Controller != nullptr) {
 		// find out which way is forward
-		//const FRotator rotation = GetMesh()->GetComponentRotation();
 		const FRotator rotation = Controller->GetControlRotation();
 		const FRotator yawRotation(0, rotation.Yaw, 0);
 
 		// get forward vector
-		//const FVector forwardDirection = GetMesh()->GetForwardVector();
 		const FVector forwardDirection = FRotationMatrix(yawRotation).GetUnitAxis(EAxis::X);
 
 		// get right vector 
-		//const FVector rightDirection = GetMesh()->GetRightVector();
 		const FVector rightDirection = FRotationMatrix(yawRotation).GetUnitAxis(EAxis::Y);
 
 		// add movement
@@ -139,25 +133,10 @@ void AMainCharacter::Look(const FInputActionValue& Value)
 	FVector2D lookAxisVector = Value.Get<FVector2D>();
 
 	if (Controller != nullptr) {
-		//SpringArmComponent->AddLocalRotation(FRotator(0, lookAxisVector.X, 0));
-		//SpringArmComponent->AddLocalRotation(FRotator(lookAxisVector.Y, 0, 0));
-		//SpringArmComponent->AddRelativeRotation(FRotator(lookAxisVector.Y, lookAxisVector.X, 0));
 		AddControllerYawInput(lookAxisVector.X);
 		AddControllerPitchInput(lookAxisVector.Y);
-		//CameraComponent->AddLocalRotation(FRotator(lookAxisVector.Y, 0, 0));
-		//CameraComponent->AddLocalRotation(FRotator(0, lookAxisVector.X, 0));
 	}
 	UE_LOG(LogTemp, Warning, TEXT("Look"))
-}
-
-void AMainCharacter::SetRotationTrue()
-{
-	GetCharacterMovement()->bUseControllerDesiredRotation = true;
-}
-
-void AMainCharacter::SetRotationFalse()
-{
-	GetCharacterMovement()->bUseControllerDesiredRotation = false;
 }
 
 //void AMainCharacter::Crouch(const FInputActionValue& Value)

@@ -17,37 +17,37 @@ class BLADE_API AMainCharacter : public ACharacter
 	GENERATED_BODY()
 private:
 	/** Camera boom positioning the camera behind the character */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
-	//class UATPCCameraComponent
-	class USpringArmComponent* SpringArmComponent;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	class UATPCCameraComponent* CameraComponent;
+	//class USpringArmComponent* SpringArmComponent;
 
 	/** Follow camera */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
-	class UCameraComponent* CameraComponent;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	class UCameraComponent* FollowCamera;
 
 	/** MappingContext */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UInputMappingContext* InputMappingContext;
 
 	/** Jump Input Action */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UInputAction* JumpAction;
 
 	/** Move Input Action */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UInputAction* MoveAction;
 
 	/** Look Input Action */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UInputAction* LookAction;
 
 	/** Crouch Input Action */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UInputAction* CrouchAction;
 
 	/** Crouch Input Action */
-	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Variable, meta = (AllowPrivateAccess = "true"))
-	//bool bIsCrouching;
+	/*UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Variable, meta = (AllowPrivateAccess = "true"))
+	bool bIsCrouching = false;*/
 public:
 	// Sets default values for this character's properties
 	AMainCharacter();
@@ -62,9 +62,6 @@ protected:
 	/** Called for crouching input */
 	//void Crouch(const FInputActionValue& Value);
 
-	void SetRotationTrue();
-	void SetRotationFalse();
-
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -77,12 +74,11 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	/** Returns CameraBoom subobject **/
-	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return SpringArmComponent; }
+	FORCEINLINE class UATPCCameraComponent* GetCameraBoom() const { return CameraComponent; }
 
 	/** Returns FollowCamera subobject **/
-	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return CameraComponent; }
+	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 
-	///** Returns is Crouched? **/
+	/** Returns is Crouched? **/
 	//FORCEINLINE bool IsCrouching() const { return bIsCrouching; }
-	
 };
