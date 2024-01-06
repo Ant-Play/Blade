@@ -124,7 +124,6 @@ void AMainCharacter::Move(const FInputActionValue& Value)
 		AddMovementInput(forwardDirection, movementVector.Y);
 		AddMovementInput(rightDirection, movementVector.X);
 	}
-	UE_LOG(LogTemp, Warning, TEXT("Move"))
 }
 
 void AMainCharacter::Look(const FInputActionValue& Value)
@@ -136,7 +135,6 @@ void AMainCharacter::Look(const FInputActionValue& Value)
 		AddControllerYawInput(lookAxisVector.X);
 		AddControllerPitchInput(lookAxisVector.Y);
 	}
-	UE_LOG(LogTemp, Warning, TEXT("Look"))
 }
 
 //void AMainCharacter::Crouch(const FInputActionValue& Value)
