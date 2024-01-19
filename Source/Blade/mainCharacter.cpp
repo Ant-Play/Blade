@@ -132,8 +132,8 @@ void AMainCharacter::Look(const FInputActionValue& Value)
 	FVector2D lookAxisVector = Value.Get<FVector2D>();
 
 	if (Controller != nullptr) {
-		AddControllerYawInput(lookAxisVector.X);
-		AddControllerPitchInput(lookAxisVector.Y);
+		AddControllerYawInput(lookAxisVector.X * rotationDelay);
+		AddControllerPitchInput(lookAxisVector.Y * rotationDelay);
 	}
 }
 
